@@ -1,0 +1,10 @@
+[project]
+name = "ticky"
+version = "0.1.0"
+description = "Small Discord bot that helps you make and manage support tickets easily"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "discord-py>=2.6.4",
+    "dotenv>=0.9.9",
+]
