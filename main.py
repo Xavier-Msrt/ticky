@@ -7,6 +7,9 @@ from discord.guild import Guild
 from discord.ext import commands
 from dotenv import load_dotenv
 
+max_ticket_user: int = 3 # Set the max amount of ticket by user
+
+
 class TicketButton(discord.ui.View):
     @discord.ui.button(label='🎟️ Click here to open a ticket', style=discord.ButtonStyle.primary, custom_id="open_ticket")
     async def open_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -20,6 +23,15 @@ class TicketButton(discord.ui.View):
         category = discord.utils.get(guild.categories, name='Tickets')
         if category is None:
             category = await guild.create_category('Tickets')
+
+        # limit amount of ticket by user
+        count: int = 0
+        for channel in category.channels:
+            if(channel.name.startswith(user.name)):
+                count += 1
+        if count >= max_ticket_user:
+            await interaction.response.send_message('🚫 You already have 3 tickets open!', ephemeral=True)
+            return
 
         # creat an ticket channel
         while True:
@@ -38,7 +50,7 @@ class TicketButton(discord.ui.View):
         await ticket_channel.set_permissions(guild.default_role, view_channel=False)
         await ticket_channel.set_permissions(user, view_channel=True, send_messages=True)
 
-        await interaction.response.send_message(f"Your ticket has been created: {ticket_channel.mention}", ephemeral=True)
+        await interaction.response.send_message(f"✅ Your ticket has been created: {ticket_channel.mention}", ephemeral=True)
 
 
 def all_command(bot):
@@ -68,6 +80,7 @@ def all_events():
             await ctx.send("🚫 You cannot use this command here.")
         else:
             raise error
+
 
 if __name__ == "__main__":
     load_dotenv()
