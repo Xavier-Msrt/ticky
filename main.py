@@ -6,9 +6,11 @@ from discord.member import Member
 from discord.guild import Guild
 from discord.ext import commands
 from dotenv import load_dotenv
+from discord import TextChannel
 
 max_ticket_user: int = 3 # Set the max amount of ticket by user
-
+role_ticket_manager: str = 'ticket-manager' # Role to have acces to all ticket management cmd
+category_name_ticket = 'Tickets'
 
 class TicketButton(discord.ui.View):
     @discord.ui.button(label='🎟️ Click here to open a ticket', style=discord.ButtonStyle.primary, custom_id="open_ticket")
@@ -20,9 +22,9 @@ class TicketButton(discord.ui.View):
         user: Member = interaction.user
 
         # sort ticket in one category
-        category = discord.utils.get(guild.categories, name='Tickets')
+        category = discord.utils.get(guild.categories, name=category_name_ticket)
         if category is None:
-            category = await guild.create_category('Tickets')
+            category = await guild.create_category(category_name_ticket)
 
         # limit amount of ticket by user
         count: int = 0
@@ -57,7 +59,7 @@ def all_command(bot):
 
     @bot.command(help='Create a ticket creator button')
     @commands.guild_only()
-    @commands.has_role('ticket-manager')
+    @commands.has_role(role_ticket_manager)
     async def create(ctx: commands.Context):
 
         embed = discord.Embed(
@@ -69,6 +71,24 @@ def all_command(bot):
             embed=embed,
             view=TicketButton()
         )
+
+    @bot.command(help='Delete a ticket created by a user')
+    @commands.guild_only()
+    @commands.has_role(role_ticket_manager)
+    async def delete(ctx:commands.Context):
+        channel = ctx.channel
+
+        if isinstance(channel, TextChannel):
+            if channel.category is None or channel.category.name != category_name_ticket:
+                await ctx.send(f"🚫 You can remove ticket channel outside of the category '{category_name_ticket}'!")
+                return
+            
+            await channel.delete(reason=f'Ticket close by {ctx.author}')
+        else:
+            await ctx.send("🚫 This command can only be used in text channels")
+
+
+
 
 
 def all_events():
